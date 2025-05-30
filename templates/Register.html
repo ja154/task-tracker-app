@@ -1,0 +1,217 @@
+{% extends "base.html" %} {# Extend the base.html for consistent header, footer, and styling #}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center p-4 relative z-10">
+    <div class="glass-container w-full max-w-md p-8 rounded-2xl">
+        <h1 class="text-4xl font-bold text-center mb-8 text-glow">
+            <span class="font-mono" style="color: var(--accent-secondary);"><</span>
+            <span class="inline-block animate-pulse bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">Register</span>
+            <span class="font-mono" style="color: var(--accent-secondary);">/></span>
+        </h1>
+
+        <form id="registerForm" method="POST" action="{{ url_for('register') }}" class="space-y-6">
+            <div class="form-group input-container">
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    required
+                    class="input-field w-full p-3 pr-10 rounded-lg"
+                    placeholder=" "
+                >
+                <label for="email" class="floating-label">Email Address</label>
+                <div class="validation-icon" id="emailIcon"></div>
+                <div class="error-message" id="emailError">Please enter a valid email address</div>
+            </div>
+
+            <div class="form-group input-container">
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    required
+                    class="input-field w-full p-3 pr-10 rounded-lg"
+                    placeholder=" "
+                >
+                <label for="password" class="floating-label">Password</label>
+                <div class="validation-icon" id="passwordIcon"></div>
+                <div class="password-strength" id="passwordStrength">
+                    <div class="strength-bar" id="strengthBar"></div>
+                </div>
+                <div class="error-message" id="passwordError">Password must be at least 6 characters long</div>
+            </div>
+
+            <div class="form-group input-container">
+                <input
+                    type="password"
+                    id="confirm_password"
+                    name="confirm_password"
+                    required
+                    class="input-field w-full p-3 pr-10 rounded-lg"
+                    placeholder=" "
+                >
+                <label for="confirm_password" class="floating-label">Confirm Password</label>
+                <div class="validation-icon" id="confirmIcon"></div>
+                <div class="error-message" id="confirmError">Passwords do not match</div>
+            </div>
+
+            <div class="form-group">
+                <button
+                    type="submit"
+                    id="submitBtn"
+                    class="btn btn-primary w-full px-6 py-3 rounded-lg font-semibold text-lg flex items-center justify-center space-x-2"
+                >
+                    <span id="buttonText">Create Account</span>
+                    <div class="loading" id="loadingSpinner" style="display: none;"></div> {# Spinner starts hidden #}
+                </button>
+            </div>
+        </form>
+
+        <p class="text-center mt-8" style="color: var(--text-muted);">
+            Already have an account?
+            <a href="{{ url_for('login') }}" class="animated-link font-medium">Sign In</a>
+        </p>
+
+        <div class="mt-6 pt-6 border-t" style="border-color: var(--border-primary);">
+            <p class="text-center text-sm" style="color: var(--text-muted);">
+                By registering, you agree to our terms of service
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const confirmInput = document.getElementById('confirm_password');
+    const submitBtn = document.getElementById('submitBtn');
+    const buttonText = document.getElementById('buttonText');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+
+    function updateFieldValidation(field, isValid, message = null) {
+        const input = document.getElementById(field);
+        const icon = document.getElementById(field + 'Icon');
+        const error = document.getElementById(field + 'Error');
+
+        if (!input || !icon || !error) return; 
+
+        if (input.value.length > 0) {
+            input.classList.toggle('valid', isValid);
+            input.classList.toggle('invalid', !isValid);
+
+            icon.classList.add('show');
+            icon.classList.toggle('valid', isValid);
+            icon.classList.toggle('invalid', !isValid);
+            icon.innerHTML = isValid ? '✓' : '✗'; 
+        } else {
+            input.classList.remove('valid', 'invalid');
+            icon.classList.remove('show');
+            icon.innerHTML = ''; 
+        }
+        if (message) error.textContent = message; // Update error message content if provided
+        // Show error if invalid, has value, and not currently focused
+        error.classList.toggle('show', !isValid && input.value.length > 0 && document.activeElement !== input);
+    }
+    
+    ['email', 'password', 'confirm_password'].forEach(fieldName => {
+        const input = document.getElementById(fieldName);
+        const error = document.getElementById(fieldName + 'Error');
+        if (input && error) {
+            input.addEventListener('focus', () => {
+                error.classList.remove('show'); // Hide error on focus
+            });
+            input.addEventListener('blur', () => {
+                // Trigger validation again on blur to show error if needed
+                input.dispatchEvent(new Event('input', { bubbles: true })); // Ensure event bubbles for listeners
+            });
+        }
+    });
+
+    emailInput.addEventListener('input', function() {
+        const email = this.value;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const isValid = emailRegex.test(email);
+        updateFieldValidation('email', isValid, "Please enter a valid email address");
+    });
+
+    passwordInput.addEventListener('input', function() {
+        const password = this.value;
+        const strength = calculatePasswordStrength(password);
+        const isValid = password.length >= 6;
+        updatePasswordStrength(strength);
+        updateFieldValidation('password', isValid, "Password must be at least 6 characters long");
+
+        if (confirmInput.value.length > 0) { // Re-validate confirm password
+            updateFieldValidation('confirm', confirmInput.value === password, "Passwords do not match");
+        }
+    });
+
+    confirmInput.addEventListener('input', function() {
+        const isValid = this.value === passwordInput.value && this.value.length > 0;
+        updateFieldValidation('confirm', isValid, "Passwords do not match");
+    });
+
+
+    function calculatePasswordStrength(password) {
+        let strength = 0;
+        if (password.length >= 6) strength++; 
+        if (password.length >= 8) strength++; 
+        if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++; 
+        if (/[0-9]/.test(password)) strength++; 
+        if (/[^A-Za-z0-9]/.test(password)) strength++; 
+        return strength;
+    }
+
+    function updatePasswordStrength(strength) {
+        const strengthIndicator = document.getElementById('passwordStrength');
+        const strengthBar = document.getElementById('strengthBar');
+
+        if (passwordInput.value.length > 0) {
+            strengthIndicator.classList.add('show');
+            strengthBar.className = 'strength-bar'; 
+
+            if (strength <= 1) strengthBar.classList.add('strength-weak');
+            else if (strength === 2) strengthBar.classList.add('strength-fair');
+            else if (strength === 3 || strength === 4) strengthBar.classList.add('strength-good');
+            else strengthBar.classList.add('strength-strong');
+        } else {
+            strengthIndicator.classList.remove('show');
+            strengthBar.className = 'strength-bar'; 
+        }
+    }
+
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+        // Final client-side check before submit, though server is authoritative
+        let formIsValid = true;
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value)) {
+            updateFieldValidation('email', false, "Please enter a valid email address");
+            formIsValid = false;
+        }
+        if (passwordInput.value.length < 6) {
+            updateFieldValidation('password', false, "Password must be at least 6 characters long");
+            formIsValid = false;
+        }
+        if (confirmInput.value !== passwordInput.value) {
+            updateFieldValidation('confirm', false, "Passwords do not match");
+            formIsValid = false;
+        }
+
+        if (formIsValid) {
+            buttonText.textContent = 'Creating Account...';
+            loadingSpinner.style.display = 'block';
+            submitBtn.disabled = true; 
+        } else {
+            e.preventDefault(); // Prevent submission if client-side validation fails
+        }
+    });
+
+    window.addEventListener('load', () => {
+        // Trigger input events if fields are pre-filled (e.g., by browser autocomplete)
+        if(emailInput.value) emailInput.dispatchEvent(new Event('input', { bubbles: true }));
+        if(passwordInput.value) passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
+        if(confirmInput.value) confirmInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+</script>
+{% endblock %}

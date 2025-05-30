@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Task{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto profile-form-container"> {# Re-using profile-form-container for similar styling #}
+    <h1 class="text-3xl font-bold text-center mb-6" style="color: var(--text-primary);">Edit Task</h1>
+
+    <form method="POST" action="{{ url_for('edit_task', task_id=task.id) }}" class="space-y-6">
+        <div>
+            <label for="task_description" class="block text-sm font-medium mb-1" style="color: var(--text-secondary);">Description</label>
+            <input type="text" name="task_description" id="task_description" required class="input-field w-full" 
+                   value="{{ task.description }}">
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label for="due_date" class="block text-sm font-medium mb-1" style="color: var(--text-secondary);">Due Date (Optional)</label>
+                <input type="date" name="due_date" id="due_date" class="date-input w-full" 
+                       value="{{ task.due_date.isoformat() if task.due_date else '' }}">
+            </div>
+            <div>
+                <label for="priority" class="block text-sm font-medium mb-1" style="color: var(--text-secondary);">Priority</label>
+                <select name="priority" id="priority" class="select-field w-full">
+                    <option value="low" {% if task.priority == 'low' %}selected{% endif %}>Low</option>
+                    <option value="medium" {% if task.priority == 'medium' %}selected{% endif %}>Medium</option>
+                    <option value="high" {% if task.priority == 'high' %}selected{% endif %}>High</option>
+                    <option value="urgent" {% if task.priority == 'urgent' %}selected{% endif %}>Urgent</option>
+                </select>
+            </div>
+        </div>
+
+        <div>
+            <label for="category_id" class="block text-sm font-medium mb-1" style="color: var(--text-secondary);">Category (Optional)</label>
+            <select name="category_id" id="category_id" class="select-field w-full">
+                <option value="">-- Select Category --</option>
+                {% for category in categories %}
+                <option value="{{ category.id }}" {% if task.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label for="notes" class="block text-sm font-medium mb-1" style="color: var(--text-secondary);">Notes (Optional)</label>
+            <textarea name="notes" id="notes" rows="4" class="textarea-field w-full" 
+                      placeholder="Any additional details...">{{ task.notes or '' }}</textarea>
+        </div>
+
+        <div class="flex justify-center space-x-4 mt-8">
+            <button type="submit" class="btn btn-primary py-3 px-8">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                Save Changes
+            </button>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary py-3 px-8">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

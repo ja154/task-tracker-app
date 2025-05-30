@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Task Calendar</title>
+    <script src="https://cdn.tailwindcss.com"></script> {# Updated Tailwind CDN for consistency #}
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Variables from base.html for consistency */
+        :root {
+            /* Dark Theme Defaults */
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #1a1f2e;
+            --bg-tertiary: #252a3a;
+            --accent-primary: #00d4ff;
+            --accent-secondary: #6366f1;
+            --accent-success: #10b981;
+            --accent-danger: #ef4444;
+            --accent-warning: #f59e0b;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-primary: #334155;
+            --border-secondary: #475569;
+            --shadow-glow: 0 0 20px rgba(0, 212, 255, 0.15);
+            --shadow-intense: 0 0 40px rgba(0, 212, 255, 0.25);
+        }
+
+        /* Light Theme Overrides */
+        body.light {
+            --bg-primary: #f0f2f5;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #e2e8f0;
+            --accent-primary: #007bff;
+            --accent-secondary: #6366f1;
+            --accent-success: #28a745;
+            --accent-danger: #dc3545;
+            --accent-warning: #ffc107;
+            --text-primary: #2d3748;
+            --text-secondary: #4a5568;
+            --text-muted: #718096;
+            --border-primary: #e2e8f0;
+            --border-secondary: #cbd5e0;
+            --shadow-glow: 0 0 10px rgba(0, 123, 255, 0.1);
+            --shadow-intense: 0 0 20px rgba(0, 123, 255, 0.15);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #0f172a 50%, var(--bg-primary) 100%); /* Uses primary background variable */
+            min-height: 100vh;
+            color: var(--text-primary); /* Uses primary text color */
+            overflow-x: hidden;
+            position: relative; /* Needed for particles */
+        }
+        
+        /* Animated Background Elements (from base.html) */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(0, 212, 255, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(16, 185, 129, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+            animation: backgroundShift 20s ease-in-out infinite;
+        }
+        body.light::before { /* Adjust background gradients for light theme */
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(0, 123, 255, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(40, 167, 69, 0.02) 0%, transparent 50%);
+        }
+
+        @keyframes backgroundShift {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(-10px, -10px) rotate(1deg); }
+            66% { transform: translate(10px, -5px) rotate(-1deg); }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .glass-card {
+            background: rgba(26, 31, 46, 0.8); /* Using a darker secondary background from base.html */
+            backdrop-filter: blur(20px); /* Increased blur for more depth */
+            border: 1px solid var(--border-primary); /* Using border variable */
+            border-radius: 24px; /* More rounded corners */
+            padding: 2rem;
+            box-shadow: var(--shadow-glow), 0 25px 50px -12px rgba(0, 0, 0, 0.5); /* Enhanced shadow */
+            position: relative; /* For inner glow effect */
+            overflow: hidden;
+        }
+        body.light .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid var(--border-secondary);
+            box-shadow: var(--shadow-glow), 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+        }
+
+        .glass-card::before { /* Inner glow effect */
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+        @keyframes shimmer {
+            0%, 100% { opacity: 0; transform: translateX(-100%); }
+            50% { opacity: 1; transform: translateX(100%); }
+        }
+
+        .text-glow {
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5); /* Using accent-primary for glow */
+        }
+        body.light .text-glow {
+            text-shadow: 0 0 15px rgba(0, 123, 255, 0.4);
+        }
+        
+        .title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 3.5rem; /* Slightly larger title */
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 3rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary), #8b5cf6); /* Using accent variables */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+        }
+        
+        .title::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary), #8b5cf6);
+            border-radius: 15px;
+            filter: blur(20px);
+            opacity: 0.3;
+            z-index: -1;
+            animation: pulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.05); }
+        }
+        
+        .nav-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1rem 2rem;
+            background: rgba(37, 42, 58, 0.6); /* Using tertiary background */
+            border-radius: 16px; /* More rounded */
+            border: 1px solid var(--border-primary);
+        }
+        body.light .nav-controls {
+            background: rgba(226, 232, 240, 0.7);
+            border: 1px solid var(--border-secondary);
+        }
+        
+        .nav-btn {
+            background: linear-gradient(135deg, var(--bg-tertiary), var(--border-primary)); /* Using theme variables */
+            border: 1px solid var(--border-secondary);
+            color: var(--text-primary);
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        body.light .nav-btn {
+            background: linear-gradient(135deg, var(--bg-tertiary), var(--border-primary));
+            color: var(--text-primary);
+        }
+        
+        .nav-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, var(--border-primary), var(--text-muted)); /* Darker hover */
+        }
+        body.light .nav-btn:hover {
+            background: linear-gradient(135deg, var(--border-secondary), var(--text-secondary));
+        }
+        
+        .nav-btn:hover::before {
+            left: 100%;
+        }
+        
+        .month-year {
+            font-size: 2rem; /* Slightly larger */
+            font-weight: 700;
+            color: var(--accent-primary); /* Using accent primary */
+            text-shadow: 0 0 15px rgba(0, 212, 255, 0.3); /* Using accent primary for glow */
+        }
+        body.light .month-year {
+            color: var(--accent-primary);
+            text-shadow: 0 0 10px rgba(0, 123, 255, 0.2);
+        }
+        
+        .calendar-container {
+            background: rgba(26, 31, 46, 0.6); /* Lighter secondary background */
+            border-radius: 20px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-primary);
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        body.light .calendar-container {
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid var(--border-secondary);
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .calendar-header-day {
+            background: linear-gradient(135deg, var(--bg-tertiary), var(--border-primary)); /* Using theme variables */
+            color: var(--accent-primary);
+            padding: 1rem;
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 2px solid rgba(0, 212, 255, 0.3); /* Using accent primary */
+        }
+        body.light .calendar-header-day {
+            background: linear-gradient(135deg, var(--bg-tertiary), var(--border-secondary));
+            color: var(--accent-primary);
+            border-bottom: 2px solid rgba(0, 123, 255, 0.3);
+        }
+        
+        .calendar-day {
+            background: rgba(37, 42, 58, 0.4); /* Darker tertiary background */
+            min-height: 120px;
+            padding: 0.75rem;
+            border: 1px solid var(--border-primary);
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        body.light .calendar-day {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid var(--border-secondary);
+        }
+        
+        .calendar-day:hover {
+            background: rgba(0, 212, 255, 0.1); /* Accent primary hover */
+            transform: scale(1.02);
+            z-index: 10;
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.2); /* Accent primary shadow */
+        }
+        body.light .calendar-day:hover {
+            background: rgba(0, 123, 255, 0.1);
+            box-shadow: 0 8px 25px rgba(0, 123, 255, 0.2);
+        }
+        
+        .calendar-day.today {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(99, 102, 241, 0.2)); /* Accent primary & secondary */
+            border: 2px solid var(--accent-primary);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+        body.light .calendar-day.today {
+            background: linear-gradient(135deg, rgba(0, 123, 255, 0.2), rgba(99, 102, 241, 0.2));
+            border: 2px solid var(--accent-primary);
+            box-shadow: 0 0 20px rgba(0, 123, 255, 0.3);
+        }
+        
+        .calendar-day.other-month {
+            background: rgba(15, 23, 42, 0.6); /* Darker primary background */
+            opacity: 0.3;
+        }
+        body.light .calendar-day.other-month {
+            background: rgba(240, 242, 245, 0.6);
+        }
+        
+        .day-number {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+        
+        .calendar-day.today .day-number {
+            color: var(--accent-primary);
+            font-weight: 700;
+        }
+        
+        .task-on-calendar {
+            background: linear-gradient(135deg, var(--accent-secondary), #8b5cf6); /* Using accent secondary */
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            margin-bottom: 0.25rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            width: 100%; /* Ensure it takes full width */
+            text-overflow: ellipsis; /* For long task names */
+            white-space: nowrap; /* For long task names */
+        }
+        
+        .task-on-calendar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.3s;
+        }
+        
+        .task-on-calendar:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); /* Accent secondary shadow */
+        }
+        
+        .task-on-calendar:hover::before {
+            left: 100%;
+        }
+        
+        .task-on-calendar.completed {
+            background: linear-gradient(135deg, var(--accent-success), #059669); /* Accent success */
+            opacity: 0.7;
+            text-decoration: line-through;
+        }
+        
+        .add-task-section {
+            background: rgba(26, 31, 46, 0.8); /* Using secondary background */
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid var(--border-primary);
+        }
+        body.light .add-task-section {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid var(--border-secondary);
+        }
+        
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--accent-primary);
+            text-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+        }
+        body.light .section-title {
+            color: var(--accent-primary);
+            text-shadow: 0 0 10px rgba(0, 123, 255, 0.2);
+        }
+        
+        .task-form {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .input-field, .date-input, .select-field, .textarea-field { /* Added select/textarea for consistency */
+            background: rgba(37, 42, 58, 0.6); /* Using tertiary background */
+            border: 2px solid var(--border-primary);
+            color: var(--text-primary);
+            padding: 1rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 200px;
+        }
+        body.light .input-field, body.light .date-input, body.light .select-field, body.light .textarea-field {
+            background: rgba(255, 255, 255, 0.7);
+            border: 2px solid var(--border-secondary);
+            color: var(--text-primary);
+        }
+        
+        .input-field:focus, .date-input:focus, .select-field:focus, .textarea-field:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+            background: rgba(37, 42, 58, 0.8);
+        }
+        body.light .input-field:focus, body.light .date-input:focus, body.light .select-field:focus, body.light .textarea-field:focus {
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+            border-color: var(--accent-primary);
+        }
+        
+        .input-field::placeholder {
+            color: var(--text-secondary);
+        }
+
+        /* Date input specific styling for calendar icon */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1) brightness(0.8); /* For dark theme */
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        body.light input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0) brightness(1); /* Reset for light theme */
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator:hover {
+            background: rgba(0, 212, 255, 0.2);
+        }
+        body.light input[type="date"]::-webkit-calendar-picker-indicator:hover {
+            background: rgba(0, 123, 255, 0.2);
+        }
+        
+        .submit-btn {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); /* Using accent variables */
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+            flex-grow: 1; /* Allow button to grow */
+            min-width: 150px; /* Ensure minimum width */
+        }
+        body.light .submit-btn {
+            background: linear-gradient(135deg, var(--accent-primary), #0056b3);
+        }
+        
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.4); /* Accent primary shadow */
+            background: linear-gradient(135deg, #0891b2, #2563eb); /* Slightly darker gradient on hover */
+        }
+        body.light .submit-btn:hover {
+            box-shadow: 0 8px 25px rgba(0, 123, 255, 0.4);
+            background: linear-gradient(135deg, #0056b3, #003366);
+        }
+        
+        .submit-btn:hover::before {
+            left: 100%;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .title {
+                font-size: 2.5rem; /* Adjusted for smaller screens */
+            }
+            
+            .nav-controls {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .task-form {
+                flex-direction: column;
+            }
+            
+            .calendar-day {
+                min-height: 80px;
+                padding: 0.5rem;
+            }
+            
+            .calendar-header-day {
+                padding: 0.5rem;
+                font-size: 0.8rem;
+            }
+        }
+        
+        .floating-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .particle {
+            position: absolute;
+            background: radial-gradient(circle, var(--accent-primary) 0%, transparent 70%); /* Using accent primary */
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.3; }
+            50% { transform: translateY(-20px) rotate(180deg); opacity: 0.6; }
+        }
+    </style>
+</head>
+<body class="dark"> {# Hardcoding 'dark' for standalone, but in Flask it would be current_user.theme_preference #}
+    <div class="floating-particles" id="particles"></div>
+    
+    <div class="container">
+        <div class="glass-card">
+            <h1 class="title text-glow">
+                <span class="font-mono"><</span>Task Calendar<span class="font-mono">/></span>
+            </h1>
+
+            <div class="nav-controls">
+                <button id="prevMonth" class="nav-btn">< Previous</button>
+                <h2 id="currentMonthYear" class="month-year"></h2>
+                <button id="nextMonth" class="nav-btn">Next ></button>
+            </div>
+
+            <div class="calendar-container">
+                <div class="calendar-grid">
+                    <div class="calendar-header-day">Sun</div>
+                    <div class="calendar-header-day">Mon</div>
+                    <div class="calendar-header-day">Tue</div>
+                    <div class="calendar-header-day">Wed</div>
+                    <div class="calendar-header-day">Thu</div>
+                    <div class="calendar-header-day">Fri</div>
+                    <div class="calendar-header-day">Sat</div>
+                </div>
+                <div id="calendarDays" class="calendar-grid">
+                </div>
+            </div>
+
+            <div class="add-task-section">
+                <h3 class="section-title">Add New Task</h3>
+                <form class="task-form" onsubmit="handleSubmit(event)">
+                    <input
+                        type="text"
+                        name="task_description"
+                        placeholder="Enter your task description..."
+                        class="input-field"
+                        required
+                    >
+                    <input
+                        type="date"
+                        name="due_date"
+                        id="calendarDueDate"
+                        class="date-input"
+                        required
+                        title="Set the due date for the task"
+                    >
+                    <button type="submit" class="submit-btn">
+                        Add Task
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Create floating particles
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            if (!particlesContainer) return; // Guard against missing element
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.width = Math.random() * 4 + 2 + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.animationDuration = (Math.random() * 4 + 4) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+        
+        createParticles();
+
+        const monthNames = ["January", "February", "March", "April", "May", "June",
+                            "July", "August", "September", "October", "November", "December"];
+        
+        const now = new Date();
+        let currentYear = now.getFullYear();
+        let currentMonth = now.getMonth() + 1; // 1-indexed month
+
+        const currentMonthYearElement = document.getElementById('currentMonthYear');
+        const calendarDaysElement = document.getElementById('calendarDays');
+        const prevMonthButton = document.getElementById('prevMonth');
+        const nextMonthButton = document.getElementById('nextMonth');
+        const calendarDueDateInput = document.getElementById('calendarDueDate');
+
+        // Sample tasks data - this would be fetched in a real app
+        const sampleTasks = {
+            // Example: 'YYYY-MM-DD': [{ description: 'Task 1', completed: false }]
+        };
+
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        if (calendarDueDateInput) {
+            calendarDueDateInput.value = formatDate(new Date());
+        }
+
+
+        async function fetchTasksForMonth(year, month) {
+            // This is a placeholder. In a real Flask app, you'd fetch from:
+            // `/api/tasks_by_date/${year}/${month}`
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    // Simulate returning tasks for the current view based on sampleTasks
+                    const tasksForView = {};
+                    for (const dateKey in sampleTasks) {
+                        if (dateKey.startsWith(`${year}-${String(month).padStart(2, '0')}`)) {
+                            tasksForView[dateKey] = sampleTasks[dateKey];
+                        }
+                    }
+                    resolve(tasksForView);
+                }, 100);
+            });
+        }
+
+        async function renderCalendar() {
+            if (!calendarDaysElement || !currentMonthYearElement) return; // Guard
+
+            calendarDaysElement.innerHTML = ''; 
+            currentMonthYearElement.textContent = `${monthNames[currentMonth - 1]} ${currentYear}`;
+
+            const firstDayOfMonth = new Date(currentYear, currentMonth - 1, 1);
+            const lastDayOfMonth = new Date(currentYear, currentMonth, 0);
+            const numDaysInMonth = lastDayOfMonth.getDate();
+            const firstDayOfWeek = firstDayOfMonth.getDay(); 
+
+            const today = new Date();
+            const todayFormatted = formatDate(today);
+
+            const tasksByDate = await fetchTasksForMonth(currentYear, currentMonth);
+
+            for (let i = 0; i < firstDayOfWeek; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.classList.add('calendar-day', 'other-month');
+                calendarDaysElement.appendChild(emptyDay);
+            }
+
+            for (let day = 1; day <= numDaysInMonth; day++) {
+                const dayElement = document.createElement('div');
+                dayElement.classList.add('calendar-day');
+
+                const currentDate = new Date(currentYear, currentMonth - 1, day);
+                const currentDateFormatted = formatDate(currentDate);
+
+                if (currentDateFormatted === todayFormatted) {
+                    dayElement.classList.add('today');
+                }
+
+                dayElement.innerHTML = `<div class="day-number">${day}</div>`;
+
+                if (tasksByDate[currentDateFormatted]) {
+                    tasksByDate[currentDateFormatted].forEach(task => {
+                        const taskDiv = document.createElement('div');
+                        taskDiv.classList.add('task-on-calendar');
+                        if (task.completed) {
+                            taskDiv.classList.add('completed');
+                        }
+                        taskDiv.textContent = task.description;
+                        dayElement.appendChild(taskDiv);
+                    });
+                }
+                calendarDaysElement.appendChild(dayElement);
+            }
+
+            const totalCells = firstDayOfWeek + numDaysInMonth;
+            const remainingCells = (7 - (totalCells % 7)) % 7; 
+            for (let i = 0; i < remainingCells; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.classList.add('calendar-day', 'other-month');
+                calendarDaysElement.appendChild(emptyDay);
+            }
+        }
+        if(prevMonthButton) {
+            prevMonthButton.addEventListener('click', () => {
+                currentMonth--;
+                if (currentMonth < 1) {
+                    currentMonth = 12;
+                    currentYear--;
+                }
+                renderCalendar();
+            });
+        }
+        if(nextMonthButton) {
+            nextMonthButton.addEventListener('click', () => {
+                currentMonth++;
+                if (currentMonth > 12) {
+                    currentMonth = 1;
+                    currentYear++;
+                }
+                renderCalendar();
+            });
+        }
+
+
+        function handleSubmit(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const taskDescription = formData.get('task_description');
+            const dueDate = formData.get('due_date');
+            
+            if (!taskDescription || !dueDate) {
+                alert("Please enter task description and due date.");
+                return;
+            }
+
+            if (!sampleTasks[dueDate]) {
+                sampleTasks[dueDate] = [];
+            }
+            sampleTasks[dueDate].push({
+                description: taskDescription,
+                completed: false
+            });
+            
+            event.target.reset();
+            if(calendarDueDateInput) calendarDueDateInput.value = formatDate(new Date()); 
+            
+            renderCalendar();
+            
+            const submitBtn = event.target.querySelector('.submit-btn');
+            if (submitBtn) {
+                const originalText = submitBtn.textContent;
+                submitBtn.textContent = 'Task Added!';
+                submitBtn.style.background = `linear-gradient(135deg, var(--accent-success), #059669)`; 
+                
+                setTimeout(() => {
+                    submitBtn.textContent = originalText;
+                    submitBtn.style.background = `linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))`; 
+                }, 2000);
+            }
+        }
+
+        renderCalendar();
+    </script>
+</body>
+</html>

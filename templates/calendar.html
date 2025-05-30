@@ -1,0 +1,422 @@
+{% extends "Base.html" %}
+
+{% block title %}Calendar View{% endblock %}
+
+{% block content %}
+<div class="container-fluid mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-8 text-center text-accent-primary">Your Task Calendar</h1>
+
+    <div class="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
+        <div class="flex items-center space-x-4">
+            <button id="prevMonthBtn" class="btn btn-secondary px-3 py-2 rounded-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+            <h2 id="currentMonthYear" class="text-2xl font-semibold"></h2>
+            <button id="nextMonthBtn" class="btn btn-secondary px-3 py-2 rounded-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+        </div>
+        <button id="todayBtn" class="btn btn-primary">Today</button>
+    </div>
+
+    <div class="calendar-grid mb-8">
+        <div class="text-center font-bold text-lg text-text-primary">Sun</div>
+        <div class="text-center font-bold text-lg text-text-primary">Mon</div>
+        <div class="text-center font-bold text-lg text-text-primary">Tue</div>
+        <div class="text-center font-bold text-lg text-text-primary">Wed</div>
+        <div class="text-center font-bold text-lg text-text-primary">Thu</div>
+        <div class="text-center font-bold text-lg text-text-primary">Fri</div>
+        <div class="text-center font-bold text-lg text-text-primary">Sat</div>
+    </div>
+    <div id="calendarDays" class="calendar-grid">
+        </div>
+
+    <div class="mt-12 p-6 rounded-lg add-task-form-container">
+        <h3 class="text-2xl font-semibold mb-6 text-accent-primary">Tasks for <span id="selectedDateDisplay" class="text-accent-secondary"></span></h3>
+        <div id="tasksForSelectedDay" class="space-y-4">
+            <p class="text-text-secondary" id="noTasksMessage">No tasks for this day yet.</p>
+            </div>
+
+        <h4 class="text-xl font-semibold mt-8 mb-4 text-accent-primary">Add New Task for Selected Day</h4>
+        <form id="addTaskForm" class="space-y-4">
+            <input type="hidden" id="taskDueDate" name="due_date">
+            <div>
+                <label for="newTaskDescription" class="block text-text-secondary text-sm font-medium mb-1">Task Description:</label>
+                <input type="text" id="newTaskDescription" name="task_description" placeholder="e.g., Finish project report" required class="input-field w-full">
+            </div>
+            <div>
+                <label for="newTaskPriority" class="block text-text-secondary text-sm font-medium mb-1">Priority:</label>
+                <select id="newTaskPriority" name="priority" class="input-field w-full">
+                    <option value="low">Low</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                </select>
+            </div>
+            <div>
+                <label for="newtaskCategory" class="block text-text-secondary text-sm font-medium mb-1">Category:</label>
+                <select id="newtaskCategory" name="category_id" class="input-field w-full">
+                    <option value="">None</option>
+                    {% for category in current_user.categories %}
+                        <option value="{{ category.id }}" data-color="{{ category.color }}">{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="newTaskNotes" class="block text-text-secondary text-sm font-medium mb-1">Notes (Optional):</label>
+                <textarea id="newTaskNotes" name="notes" rows="3" placeholder="Add more details about the task..." class="input-field w-full"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary w-full md:w-auto">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Add Task
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    let currentYear = {{ year }};
+    let currentMonth = {{ month }};
+    let selectedDate = null; 
+    let tasksData = {}; 
+
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const currentMonthYearDisplay = document.getElementById('currentMonthYear');
+    const calendarDaysContainer = document.getElementById('calendarDays');
+    const prevMonthBtn = document.getElementById('prevMonthBtn');
+    const nextMonthBtn = document.getElementById('nextMonthBtn');
+    const todayBtn = document.getElementById('todayBtn');
+    const selectedDateDisplay = document.getElementById('selectedDateDisplay');
+    const tasksForSelectedDay = document.getElementById('tasksForSelectedDay');
+    const noTasksMessage = document.getElementById('noTasksMessage');
+    const addTaskForm = document.getElementById('addTaskForm');
+    const taskDueDateInput = document.getElementById('taskDueDate');
+    const newTaskDescriptionInput = document.getElementById('newTaskDescription');
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderCalendar(currentYear, currentMonth);
+
+        prevMonthBtn.addEventListener('click', () => {
+            currentMonth--;
+            if (currentMonth < 1) {
+                currentMonth = 12;
+                currentYear--;
+            }
+            renderCalendar(currentYear, currentMonth);
+        });
+
+        nextMonthBtn.addEventListener('click', () => {
+            currentMonth++;
+            if (currentMonth > 12) {
+                currentMonth = 1;
+                currentYear++;
+            }
+            renderCalendar(currentYear, currentMonth);
+        });
+
+        todayBtn.addEventListener('click', () => {
+            const today = new Date();
+            currentYear = today.getFullYear();
+            currentMonth = today.getMonth() + 1;
+            renderCalendar(currentYear, currentMonth);
+        });
+
+        addTaskForm.addEventListener('submit', handleAddTask);
+    });
+
+    async function fetchTasksForMonth() {
+        const monthKey = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+        if (tasksData[monthKey]) {
+            return tasksData[monthKey]; 
+        }
+
+        try {
+            const response = await fetch(`/api/tasks_by_date/${currentYear}/${currentMonth}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            tasksData[monthKey] = data; 
+            return data;
+        } catch (error) {
+            console.error('Error fetching tasks for month:', error);
+            return {}; 
+        }
+    }
+
+    async function renderCalendar(year, month) {
+        currentMonthYearDisplay.textContent = `${monthNames[month - 1]} ${year}`;
+        calendarDaysContainer.innerHTML = ''; 
+
+        const firstDayOfMonth = new Date(year, month - 1, 1);
+        const lastDayOfMonth = new Date(year, month, 0);
+        const numDaysInMonth = lastDayOfMonth.getDate();
+        const firstDayOfWeek = firstDayOfMonth.getDay(); 
+
+        const prevMonthLastDay = new Date(year, month - 1, 0).getDate();
+        const nextMonthFirstDay = 1;
+
+        const tasksForCurrentMonth = await fetchTasksForMonth();
+
+        for (let i = 0; i < firstDayOfWeek; i++) {
+            const dayElement = document.createElement('div');
+            dayElement.classList.add('calendar-day', 'other-month');
+            const dayNumber = prevMonthLastDay - firstDayOfWeek + 1 + i;
+            dayElement.innerHTML = `<div class="calendar-day-number">${dayNumber}</div>`;
+            calendarDaysContainer.appendChild(dayElement);
+        }
+
+        for (let day = 1; day <= numDaysInMonth; day++) {
+            const date = new Date(year, month - 1, day);
+            const dateString = date.toISOString().split('T')[0]; 
+            const dayElement = document.createElement('div');
+            dayElement.classList.add('calendar-day', 'current-month');
+            dayElement.innerHTML = `<div class="calendar-day-number">${day}</div>`;
+
+            if (date.toDateString() === new Date().toDateString()) {
+                dayElement.classList.add('today'); 
+            }
+
+            const tasksOnThisDay = tasksForCurrentMonth[dateString] || [];
+            if (tasksOnThisDay.length > 0) {
+                const tasksContainer = document.createElement('div');
+                tasksContainer.classList.add('flex', 'flex-col', 'gap-1', 'mt-1'); 
+                tasksOnThisDay.forEach(task => {
+                    const taskItem = document.createElement('div');
+                    taskItem.classList.add('calendar-task-item', 'truncate'); 
+                    taskItem.title = task.description; 
+                    if (task.completed) {
+                        taskItem.classList.add('completed');
+                    }
+                    if (task.is_overdue) {
+                        taskItem.classList.add('overdue');
+                    }
+                    const categoryColor = task.category_color || '#00bcd4'; 
+                    taskItem.innerHTML = `
+                        <div class="task-dot" style="background-color: ${categoryColor};"></div>
+                        <span>${task.description}</span>
+                    `;
+                     taskItem.style.borderLeftColor = categoryColor; 
+                    tasksContainer.appendChild(taskItem);
+                });
+                dayElement.appendChild(tasksContainer);
+            }
+
+            dayElement.addEventListener('click', () => selectDate(dateString));
+            calendarDaysContainer.appendChild(dayElement);
+        }
+
+        const totalDaysDisplayed = firstDayOfWeek + numDaysInMonth;
+        const cellsInGrid = Math.ceil(totalDaysDisplayed / 7) * 7; // Ensure full weeks
+        const remainingDays = cellsInGrid > totalDaysDisplayed ? cellsInGrid - totalDaysDisplayed : ( (42 - totalDaysDisplayed > 0 && totalDaysDisplayed <= 35) ? 42 - totalDaysDisplayed : 0 ) ;
+
+
+        for (let i = 0; i < remainingDays; i++) {
+            const dayElement = document.createElement('div');
+            dayElement.classList.add('calendar-day', 'other-month');
+            dayElement.innerHTML = `<div class="calendar-day-number">${nextMonthFirstDay + i}</div>`;
+            calendarDaysContainer.appendChild(dayElement);
+        }
+
+        const today = new Date();
+        if (selectedDate && selectedDate.getFullYear() === year && selectedDate.getMonth() + 1 === month) {
+             selectDate(selectedDate.toISOString().split('T')[0]); // Re-select if still in the same month
+        } else if (today.getFullYear() === year && today.getMonth() + 1 === month) {
+            selectDate(today.toISOString().split('T')[0]);
+        } else {
+            selectDate(new Date(year, month - 1, 1).toISOString().split('T')[0]);
+        }
+    }
+
+    async function selectDate(dateString) {
+        selectedDate = new Date(dateString + 'T00:00:00'); 
+        selectedDateDisplay.textContent = selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        taskDueDateInput.value = dateString; 
+
+        document.querySelectorAll('.calendar-day.selected').forEach(day => {
+            day.classList.remove('selected');
+            day.style.borderColor = 'var(--border-primary)';
+            day.style.boxShadow = 'none';
+        });
+
+        const dayElements = document.querySelectorAll('.calendar-day');
+        dayElements.forEach(dayElement => {
+            const dayNumberElement = dayElement.querySelector('.calendar-day-number');
+            if (dayNumberElement) {
+                const dayNumberText = dayNumberElement.textContent;
+                if (dayNumberText && !isNaN(parseInt(dayNumberText))) {
+                     const dayNumber = parseInt(dayNumberText);
+                    const cellDate = new Date(currentYear, currentMonth - 1, dayNumber);
+                    if (cellDate.toISOString().split('T')[0] === dateString && dayElement.classList.contains('current-month')) {
+                        dayElement.classList.add('selected');
+                        dayElement.style.borderColor = 'var(--accent-secondary)'; 
+                        dayElement.style.boxShadow = '0 0 0 2px var(--accent-secondary)';
+                    }
+                }
+            }
+        });
+
+        tasksForSelectedDay.innerHTML = ''; 
+        const monthKey = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}`;
+        // Re-fetch or use cached tasksData for the selected month
+        const tasksForThisMonth = tasksData[monthKey] || await fetchTasksForMonth(selectedDate.getFullYear(), selectedDate.getMonth() + 1);
+        const tasksOnSelectedDay = tasksForThisMonth[dateString] || [];
+
+
+        if (tasksOnSelectedDay.length === 0) {
+            noTasksMessage.classList.remove('hidden');
+            tasksForSelectedDay.appendChild(noTasksMessage);
+        } else {
+            noTasksMessage.classList.add('hidden');
+            tasksOnSelectedDay.forEach(task => {
+                const categoryName = task.category; 
+                const categoryColor = task.category_color || '#00bcd4'; 
+
+                const taskCard = document.createElement('div');
+                taskCard.classList.add('task-card'); 
+                if (task.completed) taskCard.classList.add('completed');
+                if (task.is_overdue) taskCard.classList.add('overdue');
+
+                let priorityClass = 'priority-tag-medium'; 
+                if (task.priority === 'urgent') priorityClass = 'priority-tag-urgent';
+                else if (task.priority === 'high') priorityClass = 'priority-tag-high';
+                else if (task.priority === 'low') priorityClass = 'priority-tag-low';
+
+
+                taskCard.innerHTML = `
+                    <div class="task-card-header">
+                        <span class="task-description flex-grow">${task.description}</span>
+                        <span class="priority-tag ${priorityClass}">
+                            ${task.priority}
+                        </span>
+                    </div>
+                    <div class="task-details">
+                        <span class="task-detail-item">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-text-muted"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"></path><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            Due: ${new Date(dateString + 'T00:00:00').toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric' })}
+                        </span>
+                        ${categoryName ? `
+                        <span class="category-tag" style="border-color: ${categoryColor}; color: var(--text-primary); background-color: ${categoryColor}20;">
+                            <div class="task-dot" style="background-color: ${categoryColor};"></div>
+                            ${categoryName}
+                        </span>` : ''}
+                    </div>
+                    ${task.notes ? `<p class="text-sm text-text-secondary mt-2" style="color: var(--text-secondary);">${task.notes}</p>` : ''}
+                    <div class="task-actions mt-4 flex justify-end gap-2">
+                        <button onclick="toggleCompleteTask(${task.id}, '${dateString}')" class="btn ${task.completed ? 'btn-secondary' : 'btn-success'} btn-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-8.5"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                            ${task.completed ? 'Uncomplete' : 'Complete'}
+                        </button>
+                        <a href="/edit_task/${task.id}" class="btn btn-secondary btn-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            Edit
+                        </a>
+                        <button onclick="deleteTask(${task.id}, '${dateString}')" class="btn btn-danger btn-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            Delete
+                        </button>
+                    </div>
+                `;
+                tasksForSelectedDay.appendChild(taskCard);
+            });
+        }
+    }
+
+    async function handleAddTask(event) {
+        event.preventDefault();
+        const formData = new FormData(addTaskForm);
+        const data = Object.fromEntries(formData.entries());
+
+        try {
+            const response = await fetch('/add_task', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new URLSearchParams(data).toString()
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                newTaskDescriptionInput.value = '';
+                document.getElementById('newTaskNotes').value = '';
+                document.getElementById('newTaskPriority').value = 'medium';
+                document.getElementById('newtaskCategory').value = '';
+
+                const taskDate = new Date(data.due_date + 'T00:00:00');
+                const monthKey = `${taskDate.getFullYear()}-${String(taskDate.getMonth() + 1).padStart(2, '0')}`;
+                delete tasksData[monthKey]; // Invalidate cache for the month of the new task
+
+                await renderCalendar(currentYear, currentMonth); // Re-render the current view
+                // If the new task's month is the currently viewed month, re-select the date
+                if (taskDate.getFullYear() === currentYear && taskDate.getMonth() + 1 === currentMonth) {
+                    selectDate(data.due_date);
+                }
+                // Flash message will be shown by base.html from server response
+            } else {
+                console.error('Error adding task: ' + result.message);
+                alert('Error adding task: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Network or server error:', error);
+            alert('An unexpected error occurred. Please try again.');
+        }
+    }
+
+    async function toggleCompleteTask(taskId, dateString) {
+        try {
+            const response = await fetch(`/complete_task/${taskId}`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                const taskDate = new Date(dateString + 'T00:00:00');
+                const monthKey = `${taskDate.getFullYear()}-${String(taskDate.getMonth() + 1).padStart(2, '0')}`;
+                delete tasksData[monthKey]; 
+                // Re-render the entire calendar might be too much, just re-fetch and re-select
+                await fetchTasksForMonth(currentYear,currentMonth); // Re-fetch data for current calendar view
+                await renderCalendar(currentYear, currentMonth); // Re-render the calendar view
+                selectDate(dateString); // Re-display tasks for the selected day
+            } else {
+                alert('Error updating task status: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while updating the task status.');
+        }
+    }
+
+    async function deleteTask(taskId, dateString) {
+        if (confirm('Are you sure you want to delete this task?')) {
+            try {
+                const response = await fetch(`/delete_task/${taskId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    const taskDate = new Date(dateString + 'T00:00:00');
+                    const monthKey = `${taskDate.getFullYear()}-${String(taskDate.getMonth() + 1).padStart(2, '0')}`;
+                    delete tasksData[monthKey];
+                    await fetchTasksForMonth(currentYear,currentMonth);
+                    await renderCalendar(currentYear, currentMonth);
+                    selectDate(dateString); 
+                } else {
+                    alert('Failed to delete task: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while deleting the task.');
+            }
+        }
+    }
+</script>
+{% endblock %}

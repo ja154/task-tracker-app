@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Categories{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto py-8">
+    <h1 class="text-3xl font-bold text-center mb-8" style="color: var(--text-primary);">Manage Categories</h1>
+
+    <div class="bg-secondary p-6 rounded-lg shadow-md mb-8" style="background-color: var(--bg-secondary); border: 1px solid var(--border-primary);">
+        <h2 class="text-xl font-semibold mb-4" style="color: var(--text-primary);">Add New Category</h2>
+        <form method="POST" action="{{ url_for('manage_categories') }}" class="space-y-4">
+            <div>
+                <label for="name" class="block text-sm font-medium mb-1" style="color: var(--text-secondary);">
+                    Category Name
+                </label>
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    required
+                    class="input-field w-full"
+                    placeholder="e.g., Work, Personal, Shopping"
+                >
+            </div>
+            <div>
+                <label for="color" class="block text-sm font-medium mb-1" style="color: var(--text-secondary);">
+                    Category Color
+                </label>
+                <input
+                    type="color"
+                    id="color"
+                    name="color"
+                    value="#00bcd4" {# Default color for new categories #}
+                    class="w-full h-10 rounded-md border border-border-primary cursor-pointer"
+                    title="Choose a color for this category"
+                >
+            </div>
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary py-2 px-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Add Category
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="bg-secondary p-6 rounded-lg shadow-md" style="background-color: var(--bg-secondary); border: 1px solid var(--border-primary);">
+        <h2 class="text-xl font-semibold mb-4" style="color: var(--text-primary);">Existing Categories</h2>
+        {% if categories %}
+            <ul class="space-y-3">
+                {% for category in categories %}
+                <li class="flex items-center justify-between p-3 rounded-md shadow-sm" style="background-color: var(--bg-tertiary); border-left: 5px solid {{ category.color }};">
+                    <span class="text-lg font-medium" style="color: var(--text-primary);">{{ category.name }}</span>
+                    <div class="flex items-center space-x-2">
+                        <span class="w-6 h-6 rounded-full" style="background-color: {{ category.color }}; border: 1px solid var(--border-primary);"></span>
+                        <form method="POST" action="{{ url_for('delete_category', category_id=category.id) }}" onsubmit="return confirm('Are you sure you want to delete the category \'{{ category.name }}\'? All associated tasks will become uncategorized.');">
+                            <button type="submit" class="btn btn-danger py-1 px-3 text-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                Delete
+                            </button>
+                        </form>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-center text-muted">No categories created yet. Add your first category!</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Profile Settings{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto profile-form-container">
+    <h1 class="text-3xl font-bold text-center mb-8" style="color: var(--text-primary);">Your Profile</h1>
+
+    <div class="text-center mb-6">
+        <img src="{{ current_user.profile_pic_url }}" alt="Profile Picture" 
+             class="w-32 h-32 rounded-full mx-auto object-cover border-4" 
+             style="border-color: var(--accent-primary);">
+    </div>
+
+    <form method="POST" action="{{ url_for('profile') }}" enctype="multipart/form-data" class="space-y-6">
+        <div>
+            <label for="profile_pic" class="block text-sm font-medium mb-1" style="color: var(--text-secondary);">
+                Change Profile Picture (Optional)
+            </label>
+            <input
+                type="file"
+                id="profile_pic"
+                name="profile_pic"
+                class="input-field w-full file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-accent-primary file:text-white hover:file:bg-opacity-80"
+                accept="image/png, image/jpeg, image/gif" 
+            >
+            <p class="text-xs mt-1" style="color: var(--text-muted);">Allowed: JPG, PNG, GIF. Max size: 2MB (not enforced client-side yet).</p>
+        </div>
+
+        <div>
+            <label for="name" class="block text-sm font-medium mb-1" style="color: var(--text-secondary);">
+                Name
+            </label>
+            <input
+                type="text"
+                id="name"
+                name="name"
+                value="{{ current_user.name or '' }}"
+                class="input-field w-full"
+                placeholder="Your Name"
+            >
+        </div>
+
+        <div>
+            <label for="theme_preference" class="block text-sm font-medium mb-1" style="color: var(--text-secondary);">
+                Theme Preference
+            </label>
+            <select id="theme_preference" name="theme_preference" class="select-field w-full">
+                <option value="dark" {% if current_user.theme_preference == 'dark' %}selected{% endif %}>Dark</option>
+                <option value="light" {% if current_user.theme_preference == 'light' %}selected{% endif %}>Light</option>
+            </select>
+        </div>
+
+        <h2 class="text-xl font-semibold mt-8 mb-4" style="color: var(--text-primary);">Change Password</h2>
+        <p class="text-sm text-center mb-4" style="color: var(--text-muted);">
+            Leave password fields blank if you don't want to change your password.
+        </p>
+
+        <div>
+            <label for="current_password" class="block text-sm font-medium mb-1" style="color: var(--text-secondary);">
+                Current Password
+            </label>
+            <input
+                type="password"
+                id="current_password"
+                name="current_password"
+                class="input-field w-full"
+                placeholder="Enter current password"
+                autocomplete="current-password"
+            >
+        </div>
+
+        <div>
+            <label for="new_password" class="block text-sm font-medium mb-1" style="color: var(--text-secondary);">
+                New Password
+            </label>
+            <input
+                type="password"
+                id="new_password"
+                name="new_password"
+                class="input-field w-full"
+                placeholder="Enter new password (min 6 characters)"
+                autocomplete="new-password"
+            >
+        </div>
+
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary py-3 px-8">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                Update Profile
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
