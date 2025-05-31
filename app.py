@@ -8,16 +8,13 @@ import calendar
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from werkzeug.utils import secure_filename # For secure filenames
-import secrets # For random hex for filenames
+from werkzeug.utils import secure_filename 
+import secrets
 
-# Initialize the Flask application
 app = Flask(__name__)
 
-# Get the absolute path to the directory where app.py is located
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-# --- Configuration ---
 app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY') or os.urandom(24)
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
@@ -29,7 +26,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 UPLOAD_FOLDER = os.path.join(basedir, 'static/profile_pics')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-os.makedirs(UPLOAD_FOLDER, exist_ok=True) # Create folder if it doesn't exist
+os.makedirs(UPLOAD_FOLDER, exist_ok=True) 
 
 # Email configuration (ensure these are set as environment variables for production)
 app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER') or 'smtp.example.com'
@@ -54,7 +51,7 @@ class User(db.Model, UserMixin):
     name = db.Column(db.String(100), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     theme_preference = db.Column(db.String(20), default='dark')
-    profile_image_file = db.Column(db.String(20), nullable=False, default='default.svg') # New field
+    profile_image_file = db.Column(db.String(20), nullable=False, default='default.svg')
 
     tasks = db.relationship('Task', backref='user', lazy=True, cascade='all, delete-orphan')
     categories = db.relationship('Category', backref='user', lazy=True, cascade='all, delete-orphan')
@@ -85,7 +82,7 @@ class User(db.Model, UserMixin):
     def __repr__(self):
         return f"User('{self.email}')"
 
-# ... (Category and Task models remain the same) ...
+
 class Category(db.Model):
     """Category model for organizing tasks."""
     id = db.Column(db.Integer, primary_key=True)
@@ -122,7 +119,7 @@ class Task(db.Model):
 def load_user(user_id):
     return db.session.get(User, int(user_id))
 
-# --- Helper for Profile Picture ---
+
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -133,17 +130,17 @@ def save_picture(form_picture):
     picture_fn = random_hex + f_ext
     picture_path = os.path.join(app.root_path, 'static/profile_pics', picture_fn)
     
-    # # Optional: Resize image before saving to save space
-    # from PIL import Image
-    # output_size = (125, 125)
-    # i = Image.open(form_picture)
-    # i.thumbnail(output_size)
-    # i.save(picture_path)
     
-    form_picture.save(picture_path) # Save original for now
+    from PIL import Image
+    output_size = (125, 125)
+    i = Image.open(form_picture)
+    i.thumbnail(output_size)
+    i.save(picture_path)
+    
+    form_picture.save(picture_path) 
     return picture_fn
 
-# ... (send_email, create_default_categories_for_new_user, auth routes, task routes, category routes remain the same) ...
+
 # --- Routes ---
 
 @app.before_request
@@ -369,15 +366,14 @@ def profile():
     if request.method == 'POST':
         is_theme_update_ajax = 'theme_preference' in request.form and \
                                request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-                               # Removed len and name check for simplicity, assuming JS sends only theme for AJAX theme update
+                            
 
         if is_theme_update_ajax:
             current_user.theme_preference = request.form.get('theme_preference', current_user.theme_preference)
-            # If only theme is sent, we assume name is not being changed by this specific AJAX call.
             db.session.commit()
             return jsonify(success=True, message="Theme updated via AJAX.")
 
-        # Full profile update from form submission (non-AJAX)
+        
         current_user.name = request.form.get('name', current_user.name)
         current_user.theme_preference = request.form.get('theme_preference', current_user.theme_preference)
         
@@ -396,7 +392,7 @@ def profile():
                 
                 filename = save_picture(file)
                 current_user.profile_image_file = filename
-            elif file.filename != '': # File was selected but not allowed
+            elif file.filename != '': 
                  flash('Invalid file type for profile picture. Allowed types: png, jpg, jpeg, gif.', 'error')
 
 
@@ -407,7 +403,6 @@ def profile():
         if new_password: 
             if not current_password or not current_user.check_password(current_password):
                 flash('Current password is incorrect.', 'error')
-                # Ensure other changes are not lost if password change fails by re-rendering with current form data
                 return render_template('profile.html', name=current_user.name, theme_preference=current_user.theme_preference)
 
 
