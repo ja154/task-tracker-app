@@ -43,7 +43,7 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 login_manager.login_message_category = 'info'
 
-# --- Database Models ---
+# Database Models
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
@@ -141,8 +141,7 @@ def save_picture(form_picture):
     return picture_fn
 
 
-# --- Routes ---
-
+# Routes
 @app.before_request
 def create_default_categories_for_new_user():
     if current_user.is_authenticated and not current_user.categories:
