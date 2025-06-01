@@ -9,43 +9,43 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        /* --- CSS Variables for Theming --- */
+        
         :root {
             /* Dark Theme (Default) - Enhanced for better visibility */
-            --bg-primary: #1F2937; /* A slightly softer dark gray-blue */
-            --bg-secondary: #374151; /* Darker gray for cards/elements */
-            --bg-tertiary: #4B5563; /* Medium gray for inputs/hover */
-            --accent-primary: #60A5FA; /* A gentle, vibrant blue */
-            --accent-secondary: #A78BFA; /* A soft, playful purple */
-            --accent-success: #34D399; /* Softer emerald green */
-            --accent-danger: #EF4444; /* Standard red */
-            --accent-warning: #F59E0B; /* Standard amber yellow */
-            --text-primary: #F3F4F6; /* Near white for main text - improved contrast */
-            --text-secondary: #D1D5DB; /* Light gray for secondary text - improved contrast */
-            --text-muted: #9CA3AF; /* Medium gray for subtle text */
-            --border-primary: #4B5563; /* Matches tertiary background for subtle borders */
-            --border-secondary: #6B7280; /* Slightly lighter border */
-            --shadow-color: rgba(0, 0, 0, 0.7); /* For dark shadows */
-            --bg-secondary-rgb: 55, 65, 81; /* RGB for opacity */
+            --bg-primary: #1F2937; 
+            --bg-secondary: #374151; /
+            --bg-tertiary: #4B5563; 
+            --accent-primary: #60A5FA; 
+            --accent-secondary: #A78BFA; 
+            --accent-success: #34D399; 
+            --accent-danger: #EF4444; 
+            --accent-warning: #F59E0B; 
+            --text-primary: #F3F4F6; 
+            --text-secondary: #D1D5DB; 
+            --text-muted: #9CA3AF; 
+            --border-primary: #4B5563; 
+            --border-secondary: #6B7280; 
+            --shadow-color: rgba(0, 0, 0, 0.7); 
+            --bg-secondary-rgb: 55, 65, 81; 
         }
 
         .light {
             /* Light Theme - Eye-friendly colors, less stark */
-            --bg-primary: #F8FAFC; /* Very light, almost white background */
-            --bg-secondary: #FFFFFF; /* Pure white for cards/elements */
-            --bg-tertiary: #F3F4F6; /* Slightly off-white for inputs/hover */
-            --accent-primary: #3B82F6; /* Muted blue */
-            --accent-secondary: #6366F1; /* Softer indigo */
-            --accent-success: #10B981; /* Standard emerald */
-            --accent-danger: #DC2626; /* Standard red */
-            --accent-warning: #D97706; /* Standard amber */
-            --text-primary: #1F2937; /* Dark charcoal for main text */
-            --text-secondary: #4B5563; /* Muted gray for secondary text */
-            --text-muted: #6B7280; /* Lighter gray for subtle text */
-            --border-primary: #D1D5DB; /* Light gray for borders */
-            --border-secondary: #E5E7EB; /* Lighter border */
-            --shadow-color: rgba(0, 0, 0, 0.1); /* For light shadows */
-            --bg-secondary-rgb: 255, 255, 255; /* RGB for opacity */
+            --bg-primary: #F8FAFC; 
+            --bg-secondary: #FFFFFF; 
+            --bg-tertiary: #F3F4F6; 
+            --accent-primary: #3B82F6;
+            --accent-secondary: #6366F1; 
+            --accent-success: #10B981; 
+            --accent-danger: #DC2626; 
+            --accent-warning: #D97706; 
+            --text-primary: #1F2937; 
+            --text-secondary: #4B5563; 
+            --text-muted: #6B7280; 
+            --border-primary: #D1D5DB; 
+            --border-secondary: #E5E7EB; 
+            --shadow-color: rgba(0, 0, 0, 0.1); 
+            --bg-secondary-rgb: 255, 255, 255; 
         }
 
         /* --- Base Styles --- */
@@ -57,8 +57,8 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            position: relative; /* For particles */
-            overflow-x: hidden; /* Prevent horizontal scroll from particles */
+            position: relative; 
+            overflow-x: hidden; 
         }
 
         /* Particles animation */
@@ -69,13 +69,13 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            z-index: 0; /* Ensure particles are behind content */
-            pointer-events: none; /* Make particles not interfere with mouse events */
+            z-index: 0; 
+            pointer-events: none; 
         }
 
         .particle {
             position: absolute;
-            background-color: rgba(96, 165, 250, 0.3); /* Accent primary (light blue) with transparency */
+            background-color: rgba(96, 165, 250, 0.3); 
             border-radius: 50%;
             opacity: 0;
             animation: floatAndFade 20s infinite ease-in-out;
@@ -93,12 +93,12 @@
                 opacity: 0.5;
             }
             100% {
-                transform: translateY(-20vh) translateX(var(--x-end, 0px)); /* Ensure px unit */
+                transform: translateY(-20vh) translateX(var(--x-end, 0px)); 
                 opacity: 0;
             }
         }
 
-        /* Ensure content is above particles */
+        /* particles */
         #app-content {
             position: relative;
             z-index: 1;
@@ -107,7 +107,7 @@
 
         /* --- Global Utility Classes --- */
         .container-fluid {
-            max-width: 1400px; /* Wider container */
+            max-width: 1400px; 
             margin-left: auto;
             margin-right: auto;
             padding-left: 1.5rem;
@@ -131,7 +131,7 @@
 
         .btn-primary {
             background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            color: #FFFFFF; /* Ensuring high contrast for primary buttons */
+            color: #FFFFFF;
         }
         .btn-primary:hover {
             opacity: 0.9;
@@ -190,7 +190,7 @@
         }
 
         /* --- Alert Messages --- */
-        .alert { /* This class is used by Flask's flash messages if category is not specified */
+        .alert { 
             padding: 1rem;
             border-radius: 0.5rem;
             margin-bottom: 1rem;
@@ -198,7 +198,7 @@
             align-items: center;
             gap: 0.75rem;
             font-weight: 500;
-            background-color: rgba(96, 165, 250, 0.2); /* Default to info style */
+            background-color: rgba(96, 165, 250, 0.2); 
             color: var(--accent-primary);
             border: 1px solid var(--accent-primary);
         }
@@ -268,9 +268,9 @@
         }
         .task-card-header {
             display: flex;
-            align-items: flex-start; /* Align items to the top */
+            align-items: flex-start;
             justify-content: space-between;
-            flex-wrap: nowrap; /* Prevent checkbox from wrapping */
+            flex-wrap: nowrap; 
             gap: 0.75rem;
         }
         .task-description {
@@ -302,7 +302,7 @@
         }
         .priority-tag-urgent { background-color: var(--accent-danger); } 
         .priority-tag-high { background-color: var(--accent-warning); } 
-        .priority-tag-medium { background-color: #eab308; } /* Yellow - Can use a var if defined */
+        .priority-tag-medium { background-color: #eab308; } 
         .priority-tag-low { background-color: var(--accent-success); } 
         
         .category-tag {
@@ -314,7 +314,7 @@
             border: 1px solid; 
             display: inline-flex; 
             align-items: center;
-            gap: 0.4rem; /* Space for dot */
+            gap: 0.4rem; 
         }
         .task-actions {
             display: flex;
@@ -360,7 +360,7 @@
         }
         .calendar-day.today .calendar-day-number {
             background-color: var(--accent-primary);
-            color: var(--bg-primary) !important; /* Ensure contrast */
+            color: var(--bg-primary) !important; 
             border-radius: 50%;
             width: 1.75rem;
             height: 1.75rem;
@@ -402,7 +402,7 @@
             border-left-color: var(--accent-success);
         }
         .calendar-task-item.overdue { /* Used in JS */
-            border-left-color: var(--accent-danger) !important; /* Make sure it overrides if category color is also set */
+            border-left-color: var(--accent-danger) !important; 
         }
         .task-dot {
             width: 8px;
@@ -411,7 +411,7 @@
             flex-shrink: 0;
         }
         
-        .glass-container { /* For Register Page */
+        .glass-container { 
             background: rgba(var(--bg-secondary-rgb), 0.6); 
             backdrop-filter: blur(10px);
             border: 1px solid var(--border-primary);
@@ -504,12 +504,12 @@
 
         /* Profile picture in navbar */
         .navbar-profile-pic {
-            width: 32px; /* Adjust size as needed */
+            width: 32px; 
             height: 32px;
             border-radius: 50%;
             object-fit: cover;
             border: 2px solid var(--accent-secondary);
-            margin-left: 0.5rem; /* Space from other links */
+            margin-left: 0.5rem; 
         }
 
         @media (max-width: 768px) {
@@ -524,17 +524,17 @@
                 border-top: 1px solid var(--border-primary);
                 z-index: 50; 
             }
-            .navbar-links.hidden { /* This class is toggled by JS */
+            .navbar-links.hidden { 
                 display: none;
             }
-            .navbar-links a, .navbar-links .btn { /* Apply to buttons in mobile menu too */
+            .navbar-links a, .navbar-links .btn {
                 padding: 0.75rem 1.5rem;
                 border-radius: 0;
-                display: block; /* Make links full width */
+                display: block; 
                 text-align: center;
             }
-             .navbar-links .btn { /* Reset some btn styles for mobile nav */
-                margin: 0.5rem 1.5rem; /* Add some margin for buttons */
+             .navbar-links .btn { 
+                margin: 0.5rem 1.5rem; 
              }
             .navbar-toggle {
                 display: block; 
@@ -551,15 +551,15 @@
             }
         }
         @media (min-width: 769px) {
-            .navbar-links { /* This targets #mainNavbarLinks */
+            .navbar-links { 
                 display: flex !important; 
-                align-items: center; /* Align profile pic with links */
+                align-items: center; 
                 position: static; 
                 width: auto;
                 border-top: none;
                 padding: 0;
             }
-            #mobileNavbarLinks { /* Explicitly hide mobile menu on desktop */
+            #mobileNavbarLinks { 
                 display: none !important;
             }
             .navbar-toggle {
@@ -575,8 +575,8 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            width: auto; /* Allow to shrink to content */
-            max-width: 350px; /* Prevent overly wide messages */
+            width: auto; 
+            max-width: 350px; 
         }
         .flash-message {
             padding: 12px 20px;
@@ -585,11 +585,11 @@
             font-weight: 500;
             opacity: 0;
             transform: translateX(100%);
-            animation: slideIn 0.5s forwards, fadeOut 0.5s 4.5s forwards; /* Extended fadeout delay */
+            animation: slideIn 0.5s forwards, fadeOut 0.5s 4.5s forwards; 
             display: flex;
             align-items: center;
             gap: 10px;
-            color: white; /* Default text color, assuming solid backgrounds */
+            color: white; 
         }
         @keyframes slideIn {
             to {
@@ -746,8 +746,8 @@
             } else if (color.startsWith('rgb')) { 
                 return color.match(/\d+/g).slice(0,3).join(',');
             }
-            const defaultDarkRgb = '55, 65, 81'; // --bg-secondary dark
-            const defaultLightRgb = '255, 255, 255'; // --bg-secondary light
+            const defaultDarkRgb = '55, 65, 81'; 
+            const defaultLightRgb = '255, 255, 255'; 
             return body.classList.contains('light') ? defaultLightRgb : defaultDarkRgb;
         }
 
